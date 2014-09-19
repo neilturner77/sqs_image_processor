@@ -1,0 +1,5 @@
+#!/usr/bin/env ruby
+
+require 'sqs_image_processor'
+
+SqsImageProcessor::Manager.start(ARGV)

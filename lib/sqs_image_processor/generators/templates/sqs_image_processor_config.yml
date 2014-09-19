@@ -1,0 +1,21 @@
+aws:
+  sqs:
+    access_key_id: YOUR-AWS-ACCESS-KEY
+    secret_access_key: YOUR-AWS-SECRET-ACCESS-KEY
+    region: eu-west-1
+    queue_name: image-queue
+  s3:
+    access_key_id: YOUR-AWS-ACCESS-KEY
+    secret_access_key: YOUR-AWS-SECRET-ACCESS-KEY
+    region: eu-west-1
+    bucket: your-image-bucket
+versions:
+  default:
+    width: 1000
+    height: 1000
+  thumbnail:
+    width: 300
+    height: 300
+  web:
+    width: 600
+    height: 600
