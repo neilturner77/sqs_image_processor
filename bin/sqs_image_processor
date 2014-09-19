@@ -2,4 +2,5 @@
 
 require 'sqs_image_processor'
 
+# Entry-point to the application.
 SqsImageProcessor::Manager.start(ARGV)

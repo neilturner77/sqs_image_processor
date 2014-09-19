@@ -1,6 +1,19 @@
 require "thor"
 
+# :stopdoc:
+# SQS Image Processor offers a minimalist interface to make using it
+# as easy as we can. The command line interface is implemented using
+# Thor but this could easily be standard ruby if we want to strip out
+# dependencies and streamline the gem.
+# :startdoc:
 module SqsImageProcessor 
+
+  # Main interface to the application. Provides 4 commands to the user.
+  #
+  # - start
+  # - stop
+  # - status
+  # - generate_config
   class Manager < Thor
 
     desc "start", "Start the SQS Image Processor."
