@@ -22,6 +22,7 @@ module SqsImageProcessor
     def start
       config_path = options[:c]
       daemonize = options[:d]
+      child_pids = []
 
       if !File.exists?(config_path)
         puts "Error: Config file not found."
@@ -33,7 +34,12 @@ module SqsImageProcessor
         config = SqsImageProcessor::Config.load( config_path )
         puts "Loaded config file at #{config_path}."
         puts "Starting SQS Image Processor."
-        SqsImageProcessor::Worker.start( config )
+        4.times do
+          fork do
+            SqsImageProcessor::Worker.start( config )
+          end
+        end
+        Process.waitall
       end
     end
 

@@ -1,3 +1,5 @@
+require 'fileutils'
+
 module SqsImageProcessor
   module ProcessManager
     def self.pid_is_running?( pid )
@@ -13,6 +15,13 @@ module SqsImageProcessor
       if self.is_running?
         pid = File.open("/tmp/sqs_image_processor_manager.pid", 'a+') {|f| f.read }.to_i
         Process.kill("KILL", pid)
+        Dir.foreach('/tmp/sqs_image_processor_manager') do |item|
+          next if item == '.' or item == '..'
+          begin
+            Process.kill("KILL", item.gsub('.pid','').to_i)
+          rescue
+          end
+        end
         puts "Stopped instance of SqsImageProcessor."
       else
         puts "Error: SqsImageProcessor isn't running."
@@ -29,8 +38,15 @@ module SqsImageProcessor
     end
 
     def self.generate_pid_file
+      FileUtils.mkdir_p '/tmp/sqs_image_processor_manager'
       File.open("/tmp/sqs_image_processor_manager.pid", 'w') {|f|
         f.write(Process.pid)
+      }
+    end
+
+    def self.generate_child_pid_file( pid )
+      File.open("/tmp/sqs_image_processor_manager/#{pid}.pid", 'w') {|f|
+        f.write(pid)
       }
     end
 

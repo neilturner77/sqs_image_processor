@@ -4,6 +4,7 @@ require 'uri'
 module SqsImageProcessor
   module Worker
     def self.start( config )
+      SqsImageProcessor::ProcessManager.generate_child_pid_file(Process.pid)
       continue_processing = true
       
       sqs_client = Aws::SQS::Client.new(
