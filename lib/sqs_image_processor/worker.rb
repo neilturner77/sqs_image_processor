@@ -21,16 +21,17 @@ module SqsImageProcessor
         begin
           resp = sqs_client.receive_message( {queue_url: queue.queue_url} )
           if resp.messages != nil
-            url = "http://#{config.aws.s3.bucket}.s3.amazonaws.com/#{resp.messages[0].body}"
+            body = resp.messages[0].body.gsub('http://releasd-images.s3.amazonaws.com/','')
+            url = "http://#{config.aws.s3.bucket}.s3.amazonaws.com/#{body}"
             puts "Converting #{url}"
-            system("wget -O /tmp/#{File.basename(resp.messages[0].body)} #{url} --no-cache > /dev/null")
+            system("wget -O /tmp/#{File.basename(body)} #{url} --no-cache > /dev/null")
             config.versions.to_h.each do |k, v|
               version_name = k
               width = v['width']
               height = v['height']
-              filename = File.basename(resp.messages[0].body)
+              filename = File.basename(body)
               version_filename = "#{filename.chomp(File.extname(filename))}_#{version_name}#{File.extname(filename)}"
-              version_path = "#{resp.messages[0].body.chomp(filename)}#{version_filename}}"
+              version_path = "#{body.chomp(filename)}#{version_filename}}"
               system("gm convert /tmp/#{filename} -resize '#{width}x#{height}' +profile \"*\" /tmp/#{version_filename} > /dev/null")
 
               # Upload to S3
@@ -48,7 +49,7 @@ module SqsImageProcessor
               queue_url: queue.queue_url,
               receipt_handle: resp.messages[0].receipt_handle
             )
-            File.delete("/tmp/#{File.basename(resp.messages[0].body)}") if File.exists?("/tmp/#{File.basename(resp.messages[0].body)}")
+            File.delete("/tmp/#{File.basename(body)}") if File.exists?("/tmp/#{File.basename(body)}")
           end
         rescue
           # Immediately return this item to the queue for processing.
