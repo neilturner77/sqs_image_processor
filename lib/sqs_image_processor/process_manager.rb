@@ -13,9 +13,9 @@ module SqsImageProcessor
 
     def self.kill
       if self.is_running?
-        pid = File.open("/tmp/sqs_image_processor_manager.pid", 'a+') {|f| f.read }.to_i
+        pid = File.open("/tmp/sqs_image_processor.pid", 'a+') {|f| f.read }.to_i
         Process.kill("KILL", pid)
-        Dir.foreach('/tmp/sqs_image_processor_manager') do |item|
+        Dir.foreach('/tmp/sqs_image_processor') do |item|
           next if item == '.' or item == '..'
           begin
             Process.kill("KILL", item.gsub('.pid','').to_i)
@@ -29,7 +29,7 @@ module SqsImageProcessor
     end
 
     def self.is_running?
-      pid = File.open("/tmp/sqs_image_processor_manager.pid", 'a+') {|f| f.read }.to_i
+      pid = File.open("/tmp/sqs_image_processor.pid", 'a+') {|f| f.read }.to_i
       if pid == 0 || !self.pid_is_running?(pid)
         false
       else
@@ -38,8 +38,8 @@ module SqsImageProcessor
     end
 
     def self.generate_pid_file
-      FileUtils.mkdir_p '/tmp/sqs_image_processor_manager'
-      File.open("/tmp/sqs_image_processor_manager.pid", 'w') {|f|
+      FileUtils.mkdir_p '/tmp/sqs_image_processor'
+      File.open("/tmp/sqs_image_processor.pid", 'w') {|f|
         f.write(Process.pid)
       }
     end

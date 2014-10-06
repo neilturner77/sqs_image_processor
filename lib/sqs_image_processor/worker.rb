@@ -41,13 +41,14 @@ module SqsImageProcessor
                 key: version_path
               )
 
-              puts 'SAVED: ' + config.aws.s3.bucket + '/' + version_path
+              File.delete("/tmp/#{version_filename}") if File.exists?("/tmp/#{version_filename}")
 
             end
             sqs_client.delete_message(
               queue_url: queue.queue_url,
               receipt_handle: resp.messages[0].receipt_handle
             )
+            File.delete("/tmp/#{File.basename(resp.messages[0].body)}") if File.exists?("/tmp/#{File.basename(resp.messages[0].body)}")
           end
         rescue
           # Immediately return this item to the queue for processing.
