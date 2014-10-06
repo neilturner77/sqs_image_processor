@@ -10,8 +10,12 @@ module SqsImageProcessor
         credentials: Aws::Credentials.new(config.aws.sqs.access_key_id, config.aws.sqs.secret_access_key),
         region: config.aws.sqs.region
       )
+      s3_client = Aws::S3::Client.new(
+        credentials: Aws::Credentials.new(config.aws.s3.access_key_id, config.aws.s3.secret_access_key),
+        region: config.aws.sqs.region
+      )
       queue = sqs_client.get_queue_url({queue_name: config.aws.sqs.queue_name})
-      
+
       while continue_processing
         begin
           resp = sqs_client.receive_message( {queue_url: queue.queue_url} )
@@ -23,7 +27,21 @@ module SqsImageProcessor
               version_name = k
               width = v['width']
               height = v['height']
-              system("gm convert /tmp/#{File.basename(resp.messages[0].body)} -resize '#{width}x#{height}>' +profile \"*\" /tmp/#{version_name}_#{File.basename(resp.messages[0].body)} > /dev/null")
+              filename = File.basename(resp.messages[0].body)
+              version_filename = "#{filename.chomp(File.extname(filename))}_#{version_name}#{File.extname(filename)}"
+              version_path = "#{resp.messages[0].body.chomp(filename)}#{version_filename}}"
+              system("gm convert /tmp/#{filename} -resize '#{width}x#{height}' +profile \"*\" /tmp/#{version_filename} > /dev/null")
+
+              # Upload to S3
+              s3_resp = s3_client.put_object(
+                acl: "public-read",
+                body: File.open("/tmp/#{version_filename}"),
+                bucket: config.aws.s3.bucket,
+                key: version_path
+              )
+
+              puts 'SAVED: ' + config.aws.s3.bucket + '/' + version_path
+
             end
             sqs_client.delete_message(
               queue_url: queue.queue_url,
@@ -32,12 +50,16 @@ module SqsImageProcessor
           end
         rescue
           # Immediately return this item to the queue for processing.
-          if resp && resp.messages != nil
-            sqs_client.change_message_visibility(
-              queue_url: queue.queue_url,
-              receipt_handle: resp.messages[0].receipt_handle,
-              visibility_timeout: 0
-            )
+          begin
+            if resp && resp.messages != nil
+              sqs_client.change_message_visibility(
+                queue_url: queue.queue_url,
+                receipt_handle: resp.messages[0].receipt_handle,
+                visibility_timeout: 0
+              )
+            end
+          rescue
+            # Just continue anyway
           end
         end
         sleep 0.1
