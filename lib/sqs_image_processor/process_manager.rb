@@ -45,13 +45,13 @@ module SqsImageProcessor
     end
 
     def self.generate_child_pid_file( pid )
-      File.open("/tmp/sqs_image_processor_manager/#{pid}.pid", 'w') {|f|
+      File.open("/tmp/sqs_image_processor/#{pid}.pid", 'w') {|f|
         f.write(pid)
       }
     end
 
     def self.get_pid
-      pid = File.open("/tmp/sqs_image_processor_manager.pid", 'a+') {|f| f.read }.to_i
+      pid = File.open("/tmp/sqs_image_processor.pid", 'a+') {|f| f.read }.to_i
     end
   end
 end
